@@ -5,11 +5,11 @@ import os
 
 app = FastAPI(title="AI Text Generator")
 
-# Hugging Face token (необязателен для публичных моделей)
+# Hugging Face token (обязательно для router API)
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
-# Новый официальный endpoint Hugging Face
-MODEL_URL = "https://router.huggingface.co/hf-inference/models/gpt2"
+# Новый официальный endpoint Hugging Face для text-generation
+MODEL_URL = "https://api-inference.huggingface.co/models/gpt2?pipeline_tag=text-generation"
 
 headers = {}
 if HF_API_TOKEN:
@@ -31,7 +31,7 @@ def generate_text(prompt: Prompt):
         response = requests.post(
             MODEL_URL,
             headers=headers,
-            json={"inputs": prompt.text},
+            json={"inputs": prompt.text, "options": {"wait_for_model": True}},
             timeout=30
         )
 
