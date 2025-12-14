@@ -5,11 +5,12 @@ import os
 
 app = FastAPI(title="AI Text Generator")
 
-# Hugging Face settings
+# Hugging Face token (необязателен для публичных моделей)
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-MODEL_URL = "https://api-inference.huggingface.co/models/gpt2"
 
-# Headers: token is optional for public models
+# Новый официальный endpoint Hugging Face
+MODEL_URL = "https://router.huggingface.co/hf-inference/models/gpt2"
+
 headers = {}
 if HF_API_TOKEN:
     headers["Authorization"] = f"Bearer {HF_API_TOKEN}"
@@ -26,18 +27,22 @@ def root():
 
 @app.post("/generate")
 def generate_text(prompt: Prompt):
-    response = requests.post(
-        MODEL_URL,
-        headers=headers,
-        json={"inputs": prompt.text},
-        timeout=30
-    )
+    try:
+        response = requests.post(
+            MODEL_URL,
+            headers=headers,
+            json={"inputs": prompt.text},
+            timeout=30
+        )
 
-    if response.status_code != 200:
-        return {
-            "error": "Hugging Face API error",
-            "status_code": response.status_code,
-            "details": response.text
-        }
+        if response.status_code != 200:
+            return {
+                "error": "Hugging Face API error",
+                "status_code": response.status_code,
+                "details": response.text
+            }
 
-    return response.json()
+        return response.json()
+
+    except Exception as e:
+        return {"error": str(e)}
