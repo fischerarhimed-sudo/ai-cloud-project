@@ -7,7 +7,7 @@ app = FastAPI(title="AI Text Generator")
 
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
-API_URL = "https://router.huggingface.co/v1/chat/completions"
+API_URL = "https://router.huggingface.co/v1/completions"
 
 headers = {
     "Content-Type": "application/json",
@@ -30,10 +30,9 @@ def root():
 def generate_text(prompt: Prompt):
     payload = {
         "model": "openai-community/gpt2",
-        "messages": [
-            {"role": "user", "content": prompt.text}
-        ],
-        "max_tokens": 100
+        "prompt": prompt.text,
+        "max_tokens": 100,
+        "temperature": 0.7
     }
 
     response = requests.post(
@@ -52,5 +51,5 @@ def generate_text(prompt: Prompt):
 
     data = response.json()
     return {
-        "generated_text": data["choices"][0]["message"]["content"]
+        "generated_text": data["choices"][0]["text"]
     }
