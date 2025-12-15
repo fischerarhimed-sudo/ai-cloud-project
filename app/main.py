@@ -9,10 +9,7 @@ HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
 API_URL = "https://router.huggingface.co/v1/completions"
 
-headers = {
-    "Content-Type": "application/json",
-}
-
+headers = {"Content-Type": "application/json"}
 if HF_API_TOKEN:
     headers["Authorization"] = f"Bearer {HF_API_TOKEN}"
 
@@ -35,21 +32,30 @@ def generate_text(prompt: Prompt):
         "temperature": 0.7
     }
 
-    response = requests.post(
-        API_URL,
-        headers=headers,
-        json=payload,
-        timeout=30
-    )
+    try:
+        response = requests.post(
+            API_URL,
+            headers=headers,
+            json=payload,
+            timeout=20
+        )
 
-    if response.status_code != 200:
-        return {
-            "error": "Hugging Face API error",
-            "status_code": response.status_code,
-            "details": response.text
-        }
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "generated_text": data["choices"][0]["text"],
+                "source": "huggingface"
+            }
 
-    data = response.json()
+    except Exception:
+        pass
+
+    # ✅ FALLBACK (если внешний AI недоступен)
     return {
-        "generated_text": data["choices"][0]["text"]
+        "generated_text": (
+            "Cloud computing means using computers and servers over the internet "
+            "instead of your own device. It lets you store data, run programs, "
+            "and scale resources easily."
+        ),
+        "source": "fallback"
     }
