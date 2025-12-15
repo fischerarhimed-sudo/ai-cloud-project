@@ -7,9 +7,12 @@ app = FastAPI(title="AI Text Generator")
 
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
-MODEL_URL = "https://router.huggingface.co/hf-inference/models/openai-community/gpt2"
+API_URL = "https://router.huggingface.co/v1/chat/completions"
 
-headers = {"Content-Type": "application/json"}
+headers = {
+    "Content-Type": "application/json",
+}
+
 if HF_API_TOKEN:
     headers["Authorization"] = f"Bearer {HF_API_TOKEN}"
 
@@ -25,10 +28,18 @@ def root():
 
 @app.post("/generate")
 def generate_text(prompt: Prompt):
+    payload = {
+        "model": "openai-community/gpt2",
+        "messages": [
+            {"role": "user", "content": prompt.text}
+        ],
+        "max_tokens": 100
+    }
+
     response = requests.post(
-        MODEL_URL,
+        API_URL,
         headers=headers,
-        json={"inputs": prompt.text},
+        json=payload,
         timeout=30
     )
 
@@ -39,4 +50,7 @@ def generate_text(prompt: Prompt):
             "details": response.text
         }
 
-    return response.json()
+    data = response.json()
+    return {
+        "generated_text": data["choices"][0]["message"]["content"]
+    }
